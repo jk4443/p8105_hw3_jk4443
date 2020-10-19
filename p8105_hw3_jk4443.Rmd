@@ -18,8 +18,9 @@ instacart = instacart
 tibble::as_tibble(instacart)
 ```
 
-This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row resprenting a single product from an instacart order. Variables include identifiers for user, order, and product; the order in which each product was added to the cart. There are several order-level variables, describing the day and time of the order, and number of days since prior order. Then there are several item-specific variables, describing the product name (e.g. Yogurt, Avocado), department (e.g. dairy and eggs, produce), and aisle (e.g. yogurt, fresh fruits), and whether the item has been ordered by this user in the past. In total, there are `r instacart %>% select(product_id) %>% distinct %>% count` products found in `r instacart %>% select(user_id, order_id) %>% distinct %>% count` orders from `r instacart %>% select(user_id) %>% distinct %>% count` distinct users.
+The instacart dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row representing the producsts ordered in an instacart order. Variables include order id, an product id. The order in which each product was added to the cart is also mentioned in the data set. The day and time of the order, and number of days since prior order is also mentioned in the dataset. The product name, department, aisle, and whether the item has been ordered by the user in the past are also mentioned. In totality, there are `r instacart %>% select(product_id) %>% distinct %>% count` products found in `r instacart %>% select(user_id, order_id) %>% distinct %>% count` orders from `r instacart %>% select(user_id) %>% distinct %>% count` distinct users.
 
+After arranging, we knot that tthere are 134 aisles, with fresh vegetables and fresh fruits holding the most items ordered by far.
 
 ```{r}
 instacart %>% 
@@ -27,6 +28,7 @@ instacart %>%
   arrange(desc(n))
 ```
 
+A plot that shows the number of items ordered in each aisle. Here, aisles are ordered by ascending number of items.
 
 ```{r}
 instacart %>% 
@@ -39,6 +41,7 @@ instacart %>%
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
 ```
 
+Here is the table that shows the three most popular items in aisles `baking ingredients`, `dog food care`, and `packaged vegetables fruits`, and includes the number of times each item is ordered in the table.
 
 ```{r}
 instacart %>% 
@@ -50,6 +53,8 @@ instacart %>%
   arrange(desc(n)) %>%
   knitr::kable()
 ```
+
+Here is the table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week.
 
 ```{r}
 instacart %>%
@@ -81,6 +86,8 @@ accel_df =
   ) 
 ```
 
+Here is a table that shows the total activity in each observation day. 
+
 ```{r}
 accel_df %>% 
   group_by(day, week) %>% 
@@ -90,11 +97,12 @@ accel_df %>%
     values_from = total_act)
 ```
 
+This plot shows 24 hour activity time course for each day, colored by day of the week. The results show a clear diurnal pattern to activity (sleep in the night and active in the day), and suggest a peak in activity on Friday evenings and Sunday mid-mornings, but few other obvious trends emerge.
+
 ```{r}
 accel_df %>% 
   ggplot(aes(x = minute, y = activity_count, group = day_id, color = day)) + 
-  geom_line(alpha = .2) + 
-  geom_smooth(aes(group = day), se = FALSE)
+  geom_line(alpha = .2)
 ```
 
 ### Problem 3
@@ -102,6 +110,10 @@ accel_df %>%
 ```{r}
 data("ny_noaa")
 ```
+
+This dataset contains `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. The variables include: weather station id, date of observation, snowfall (mm), snow depth (mm), min and max temperature etc.
+
+Here we are creating separate variables for year, month, and day. We can see that 0 is the most commonly observed value for snowfall.
 
 ```{r}
 ny_noaa %>% 
@@ -118,6 +130,7 @@ ny_noaa =
     snow = round(snow_mm * 0.03937 * 4) / 4)
 ```
 
+Below is a two-panel plot showing the average max temperature in January and in July in each station across years.
 
 ```{r}
 ny_noaa %>% 
@@ -129,6 +142,8 @@ ny_noaa %>%
   labs(title = "Mean monthly temperature for each station across years for January and July")
 ```
 
+Below we show a two-panel plot including (i) a hex plot of `tmax` vs `tmin` for the full dataset; and (ii) a ridge plot showing the distribution of snowfall values (in mm) greater than 0 and less than 100 separately by year. 
+
 ```{r}
 hex = 
   ny_noaa %>% 
@@ -139,5 +154,6 @@ ridge =
   ny_noaa %>% 
   filter(snow_mm < 100, snow_mm > 0) %>%
   ggplot(aes(x = snow, y = as.factor(year))) 
+
 ```
 
