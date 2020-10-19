@@ -9,6 +9,8 @@ library(p8105.datasets)
 library(tidyverse)
 ```
 
+### Problem 1
+
 ```{r}
 data("instacart")
 
@@ -17,3 +19,125 @@ tibble::as_tibble(instacart)
 ```
 
 This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row resprenting a single product from an instacart order. Variables include identifiers for user, order, and product; the order in which each product was added to the cart. There are several order-level variables, describing the day and time of the order, and number of days since prior order. Then there are several item-specific variables, describing the product name (e.g. Yogurt, Avocado), department (e.g. dairy and eggs, produce), and aisle (e.g. yogurt, fresh fruits), and whether the item has been ordered by this user in the past. In total, there are `r instacart %>% select(product_id) %>% distinct %>% count` products found in `r instacart %>% select(user_id, order_id) %>% distinct %>% count` orders from `r instacart %>% select(user_id) %>% distinct %>% count` distinct users.
+
+
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  arrange(desc(n))
+```
+
+
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  filter(n > 10000) %>% 
+  mutate(aisle = fct_reorder(aisle, n)) %>% 
+  ggplot(aes(x = aisle, y = n)) + 
+  geom_point() + 
+  labs(title = "Number of items ordered in each aisle") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+
+```{r}
+instacart %>% 
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>%
+  group_by(aisle) %>% 
+  count(product_name) %>% 
+  mutate(rank = min_rank(desc(n))) %>% 
+  filter(rank < 4) %>% 
+  arrange(desc(n)) %>%
+  knitr::kable()
+```
+
+```{r}
+instacart %>%
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
+  group_by(product_name, order_dow) %>%
+  summarize(mean_hour = mean(order_hour_of_day)) %>%
+  spread(key = order_dow, value = mean_hour) %>%
+  knitr::kable(digits = 2)
+```
+
+### Problem 2
+```{r}
+accel_df = 
+  read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    names_prefix = "activity_", 
+    values_to = "activity_count"
+  ) %>% 
+  mutate(
+    minute = as.numeric(minute),
+    day = factor(day),
+    day = fct_relevel(day, "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", 
+    "Friday", "Saturday"),
+    weekend = as.numeric(day %in% c("Saturday", "Sunday")),
+    weekend = recode(weekend, `1` = "weekend", `0` = "weekday")
+  ) 
+```
+
+```{r}
+accel_df %>% 
+  group_by(day, week) %>% 
+  summarize(total_act = sum(activity_count)) %>% 
+  pivot_wider(
+    names_from = day, 
+    values_from = total_act)
+```
+
+```{r}
+accel_df %>% 
+  ggplot(aes(x = minute, y = activity_count, group = day_id, color = day)) + 
+  geom_line(alpha = .2) + 
+  geom_smooth(aes(group = day), se = FALSE)
+```
+
+### Problem 3
+
+```{r}
+data("ny_noaa")
+```
+
+```{r}
+ny_noaa %>% 
+  count(snow) %>%
+  arrange(desc(n))
+
+ny_noaa = 
+  ny_noaa %>% 
+  separate(date, into = c("year", "month", "day"), convert = TRUE) %>% 
+  mutate(
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin),
+    snow_mm = snow,
+    snow = round(snow_mm * 0.03937 * 4) / 4)
+```
+
+
+```{r}
+ny_noaa %>% 
+  group_by(id, year, month) %>% 
+  filter(month %in% c(1, 7)) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE, color = id)) %>% 
+  ggplot(aes(x = year, y = mean_tmax, group = id)) + geom_point() + geom_path() +
+  facet_grid(~month) +
+  labs(title = "Mean monthly temperature for each station across years for January and July")
+```
+
+```{r}
+hex = 
+  ny_noaa %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+
+ridge = 
+  ny_noaa %>% 
+  filter(snow_mm < 100, snow_mm > 0) %>%
+  ggplot(aes(x = snow, y = as.factor(year))) 
+```
+
